@@ -1,64 +1,52 @@
-# 🔍 Agent Trace Lens (エージェント・トレース・レンズ)
+# ⚡ LLM Prompt Latency & Cost Profiler
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x%20%2F%206.x-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=black)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-8.x-646cff?logo=vite&logoColor=white)](https://vitejs.dev/)
-[![Observability](https://img.shields.io/badge/AI_Agent-Observability-emerald)](https://github.com/mizoe0829/agent-trace-lens)
+[![AI Observability](https://img.shields.io/badge/LLM-Latency%20%26%20Cost%20Profiler-emerald)](https://github.com/mizoe0829/agent-trace-lens)
 [![License](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
 
-> **LLM / 自律型AIエージェントの思考プロセス・ツール呼び出し・トークン消費・フォールバックを直感的に可視化するモダン・トレースビューア**
+> **「1つのプロンプト処理にどれくらい時間がかかり、いくらコストが発生するのか？」をリアルタイムに計測・モデル比較できる開発者向けプロファイラー**
 
 ---
 
-## 💡 開発の背景と課題
+## 💡 開発の背景
 
-生成AIや自律エージェント（ReActループ、Multi-Agent協調）の実務開発において最大のペインとなるのが、**「裏でAIがどう推論し、どのツールをどんな引数で呼び出し、どこで失敗したかがブラックボックス化すること」** です。
+LLMを使ったプロダクト開発（AIチャット、要約、コード生成、AIエージェントのツール呼び出し）において、エンジニアが最も頻繁に直面する課題が **「レイテンシ（処理時間）とコストの最適化」** です。
 
-`Agent Trace Lens` は、LangfuseやOpenTelemetryのようにエージェントの実行コンテキストを即座に分解し、
-1. **思考プロセス (Reasoning / Chain of Thought)**
-2. **ツール呼び出し (Tool Calling / I/O Arguments & Payloads)**
-3. **自己修復 (Self-healing Fallbacks)**
-4. **トークン消費量・レイテンシ・APIコスト**
+- **「このプロンプト、実際にユーザーを何秒待たせるのか？」**
+- **「最初の1文字が出るまでの初速（TTFT: Time to First Token）は？」**
+- **「Claude 3.5 Sonnet、GPT-4o、Gemini 1.5 Flashで処理速度や費用はどう違う？」**
 
-を直感的なDAGフローとタイムラインでデバッグ・監査・共有可能にする開発者向けWebツールです。
+本ツールは、任意のプロンプトに対して **処理時間（秒/ms）、TTFT、生成スループット（tokens/sec）、トークン数、APIコスト（USD/JPY）** をワンクリックで計測・比較できる王道のLLMパフォーマンスプロファイラーです。
 
 ---
 
 ## ✨ 主な機能
 
-- **⚡ インタラクティブなDAG実行フロー**:
-  - ステップ間の遷移を有向非巡回グラフ（DAG）形式でシーケンシャルに可視化。
-  - 各ノードのステータス（成功、自己修復フォールバック、実行中）とレイテンシを俯瞰。
-- **⏱ 実行タイムライン & フィルタリング**:
-  - `Thought`, `Tool Call`, `RAG照会`, `Evaluation`, `Fallback` のカテゴリ別フィルタリング。
-- **🔬 ディープ・インスペクター**:
-  - ツールの入出力JSON（Arguments / Output）のフォーマット表示とワンクリッククリップボードコピー。
-  - プロンプトトークン vs 完了トークンのリアルタイム消費比率バー。
-- **▶️ ステップ・リプレイ再生**:
-  - エージェントの実行順序を1ステップずつアニメーションで追体験できるシミュレーション機能。
-- **📥 トレースJSONインポート & 📝 Markdownレポート出力**:
-  - 外部のLangfuse / LangChainログ形式のJSONを取り込み可能。
-  - チーム共有やIssue・PRにそのまま貼れるMarkdownレポートを自動生成。
-
----
-
-## 🎯 収録プリセット・シナリオ
-
-実務のリアルなAIエージェント運用を想定したプリセットデータを標準搭載しています：
-
-| シナリオ | 概要 | 主なツール呼び出し |
-| :--- | :--- | :--- |
-| **労務相談AI (36協定・特別条項)** | 社員の残業上限判定、法適合性チェックおよび特別条項発動要件の自動照会 | `vector_search_labor_agreements`, `fetch_employee_attendance_metrics`, `generate_advisory_response` |
-| **GitHub Issue 自動トリアージ** | バグ再現コード生成・AST影響範囲特定・自己修復パッチ生成・PR起票 | `ripgrep_codebase_symbol`, `run_isolated_test_runner` (Fallback発動), `create_github_pull_request` |
-| **マルチエージェント監査** | Planner・Coder・SecurityReviewerの3自律エージェント協調パイプライン | `generate_code_artifact`, `security_ast_audit` |
+- **⏱ 1プロンプトあたりのリアルタイム計測**:
+  - **総処理時間 (Total Latency)**: 推論開始から完了までの実測時間
+  - **初速 (TTFT: Time to First Token)**: 最初の1トークンが返ってくるまでの待機時間
+  - **生成速度 (Throughput)**: 1秒あたりの出力トークン数 (`tokens/sec`)
+  - **トークン数**: プロンプト入力トークン / 出力トークン の自動カウント
+  - **APIコスト**: 最新価格レートに基づく推定費用（USD & JPY換算）
+- **📊 主要モデル一括比較バー**:
+  - 同じプロンプトに対する「Claude 3.5 Sonnet vs GPT-4o vs GPT-4o-mini vs Gemini 1.5 Flash vs Gemini 1.5 Pro」の処理速度・レイテンシ・コストを横並びで可視化。
+- **🎯 実務でよく使う標準ベンチマークプリセット**:
+  - **TypeScript コード生成**: アルゴリズム（LRUキャッシュ）実装とテスト
+  - **長文技術ドキュメント要約**: システム障害ポストモーテムの箇条書き要約
+  - **JSON 構造化データ抽出**: 問い合わせ文からのスキーマ抽出
+  - **アーキテクチャ比較 Q&A**: REST vs GraphQLの選定基準
+- **📝 計測ログ履歴 & CSVエクスポート**:
+  - 過去のプロンプト計測結果をテーブル一覧で保持、CSVダウンロード対応。
 
 ---
 
 ## 🛠 技術スタック
 
 - **言語**: TypeScript (100% Strict Type Safety, `verbatimModuleSyntax`)
-- **UIフレームワーク**: React 19 + Vite 8
-- **スタイリング**: Vanilla CSS Design System (独自CSS変数トークン、Glassmorphism、ダークモード標準)
+- **フロントエンド**: React 19 + Vite 8
+- **スタイリング**: Vanilla CSS Design System (CSS変数によるダークテーマ、Glassmorphism)
 - **アイコン**: Lucide React
 
 ---
@@ -66,10 +54,10 @@
 ## 🚀 ローカル起動方法
 
 ```bash
-# 依存パッケージのインストール
+# パッケージインストール
 npm install
 
-# 開発サーバーの起動 (Vite)
+# 開発サーバー起動
 npm run dev
 
 # プロダクションビルド & 型検査
